@@ -93,7 +93,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                                          repeats: true)
         
         // initialize dataTimer to repeat every 10 seconds for saving current data
-        unitTimer = Timer.scheduledTimer(timeInterval: 10,
+        unitTimer = Timer.scheduledTimer(timeInterval: 300,
                                          target: self,
                                          selector: #selector(ViewController.saveData),
                                          userInfo: nil,
