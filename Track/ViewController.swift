@@ -9,9 +9,13 @@
 import UIKit
 import CoreLocation
 import CoreMotion
+import SwiftProtobuf
 
 class ViewController: UIViewController, CLLocationManagerDelegate {
 
+    @IBOutlet weak var startButton: UIButton!
+    @IBOutlet weak var stopButton: UIButton!
+    
     let locationManager: CLLocationManager = CLLocationManager()
     let motionManager: CMMotionManager = CMMotionManager()
     
@@ -21,9 +25,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         
         locationManager.delegate = self
         
+        stopButton.isEnabled = false
+        
     }
 
     @IBAction func startButtonPressed(_ sender: UIButton) {
+        
+        startButton.isEnabled = false
+        stopButton.isEnabled = true
         
         // start tracking
         
@@ -32,18 +41,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         locationManager.startUpdatingLocation()
         
         // initialize motion manager i.e acceleration
-        motionManager.accelerometerUpdateInterval = 0.1
+        motionManager.accelerometerUpdateInterval = 0.5
+        motionManager.startAccelerometerUpdates()
         
-        motionManager.startAccelerometerUpdates(to: OperationQueue.current!) { (_data, error) in
-            if let data = _data {
-                print(data)
-            }
-        }
-        
+//        print(motionManager.accelerometerData)
+//        print(locationManager.location)
+//        print(locationManager.desiredAccuracy)
         
     }
    
     @IBAction func stopButtonPressed(_ sender: UIButton) {
+        
+        startButton.isEnabled = true
+        stopButton.isEnabled = false
         
         // stop tracking
         
@@ -56,7 +66,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         
         for curLocation in locations {
             
-            print("Location -> \(index): + \(curLocation)")
+        //    print("Location -> \(index): + \(curLocation)")
             
         }
         
