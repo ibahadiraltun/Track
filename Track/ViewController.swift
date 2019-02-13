@@ -34,7 +34,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     let motionManager: CMMotionManager = CMMotionManager()
     
     // timer to save data every 10 seconds
-    var timer = Timer()
+    var dataTimer = Timer()
+    var unitTimer = Timer()
+    
     var currentTime = 0.0
     let startTime = Date().timeIntervalSinceReferenceDate
 
@@ -83,8 +85,19 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             }
         }
         
-        // initialize timer to repeat every 3 seconds
-        timer = Timer.scheduledTimer(timeInterval: 3.0, target: self, selector: #selector(ViewController.saveData), userInfo: nil, repeats: true)
+        // initialize dataTimer to repeat every 3 seconds for getting current data
+        dataTimer = Timer.scheduledTimer(timeInterval: 0.5,
+                                         target: self,
+                                         selector: #selector(ViewController.getData),
+                                         userInfo: nil,
+                                         repeats: true)
+        
+        // initialize dataTimer to repeat every 10 seconds for saving current data
+        unitTimer = Timer.scheduledTimer(timeInterval: 10,
+                                         target: self,
+                                         selector: #selector(ViewController.saveData),
+                                         userInfo: nil,
+                                         repeats: true)
         
     }
    
@@ -94,17 +107,18 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         stopButton.isEnabled = false
         
         // stop timing
-        timer.invalidate()
+        dataTimer.invalidate()
+        unitTimer.invalidate()
         
         // stop tracking
         locationManager.stopUpdatingLocation()
         motionManager.stopAccelerometerUpdates()
         
-        saveUnitFile()
+        saveData()
         
     }
     
-    @objc func saveData() {
+    @objc func getData() {
         
         currentTime = currentTime + 3.0
         
@@ -116,9 +130,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         locData.timestamp = currentTime
         locData.latitude = Float((currentLoc?.coordinate.latitude)!)
         locData.longitude = Float((currentLoc?.coordinate.longitude)!)
-        locData.accuracy = Float(locationManager.desiredAccuracy)
+        locData.accuracy = Float((currentLoc?.verticalAccuracy)!) // ??????
         locData.speed = Float((currentLoc?.speed)!)
+        locData.direction = true // ??????
         
+        // appending next accelerations to current locations
         for each in accelerations {
             locData.accData.append(each.accData)
         }
@@ -132,32 +148,26 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         
     }
     
-    func saveUnitFile() {
+    @objc func saveData() {
         
         let endTime = Date().timeIntervalSinceReferenceDate
 
         unitFile.driverID = UInt64((UIDevice.current.identifierForVendor?.hashValue)!)
-        unitFile.timezoneoffset = Int32(TimeZone.current.secondsFromGMT())
+        unitFile.timezoneoffset = Int32(TimeZone.current.secondsFromGMT()) // ?????
         unitFile.startTime = startTime
         unitFile.endTime = endTime
         
         print(unitFile)
         var binaryData: Data = Data()
         
-        do {
-            binaryData = try unitFile.serializedData()
-        } catch {
-            print("Some error occured while serializing data")
-        }
+        do { binaryData = try unitFile.serializedData() }
+        catch { print("Some error occured while serializing data") }
         
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         let dataURL = URL(fileURLWithPath: "TrackingData", relativeTo: paths[0])
         
-        do {
-            try binaryData.write(to: dataURL)
-        } catch {
-            print("Some error occured while saving data")
-        }
+        do { try binaryData.write(to: dataURL) }
+        catch { print("Some error occured while saving-writing data") }
         
     }
     
